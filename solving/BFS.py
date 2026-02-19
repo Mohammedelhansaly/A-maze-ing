@@ -1,6 +1,4 @@
 from collections import deque
-from maze.Maze import Maze
-from .DFS import DFSGenerator
 
 
 class BSFSolver:
@@ -49,10 +47,9 @@ class BSFSolver:
                     queue.append((nx, ny))
         return None
 
-
-maze = Maze(10, 20, (0,0),(9,19))
-dfs = DFSGenerator(maze)
-dfs.generate()
-solver = BSFSolver(maze)
-path = solver.BFS()
-print(path)
+# maze = Maze(mazeValidator)
+# dfs = DFSGenerator(maze)
+# dfs.generate()
+# solver = BSFSolver(maze)
+# path = solver.BFS()
+# print(path)
