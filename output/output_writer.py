@@ -2,6 +2,8 @@ from maze.Maze import Maze
 from solving.DFS import DFSGenerator
 from solving.BFS import BSFSolver
 from validation.maze_validator import mazeValidator
+from validation.validate_connectivity import ValidateConnectivity3X3EREA
+from pydantic import ValidationError
 
 
 class MazeWriter:
@@ -43,12 +45,19 @@ try:
                                  exit_=(9, 19))
     maze = Maze(mazevalidate.width, mazevalidate.height, mazevalidate.entry,
                 mazevalidate.exit_)
-    dfs = DFSGenerator(maze, seed=42)
+    dfs = DFSGenerator(maze)
     dfs.generate()
     solver = BSFSolver(maze)
     path = solver.BFS()
+    validate = ValidateConnectivity3X3EREA(maze)
+    if not validate.is_connected():
+        raise ValueError("Maze is not fully connected")
+    if not validate.open_erea3X3():
+        raise ValueError("Maze contains open 3x3 area")
     writer = MazeWriter(maze, path)
     writer.write_config("maze_output.txt")
-except ValueError as e:
+except ValidationError as e:
     for error in e.errors():
         print(error['msg'])
+except ValueError as e:
+    print(e)
