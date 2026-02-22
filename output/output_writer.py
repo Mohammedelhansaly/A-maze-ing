@@ -41,12 +41,15 @@ class MazeWriter:
 
 
 try:
-    mazevalidate = mazeValidator(width=25, height=20, entry=(1, 1),
-                                 exit_=(9, 19))
+    mazevalidate = mazeValidator(width=11, height=20, entry=(1, 1),
+                                 exit_=(3, 3))
     maze = Maze(mazevalidate.width, mazevalidate.height, mazevalidate.entry,
                 mazevalidate.exit_)
     dfs = DFSGenerator(maze)
+    dfs.draw_42()
     dfs.generate()
+    for row in maze.grid:
+        print([cell.walls for cell in row])
     solver = BSFSolver(maze)
     path = solver.BFS()
     validate = ValidateConnectivity3X3EREA(maze)

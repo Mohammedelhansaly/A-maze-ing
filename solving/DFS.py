@@ -1,5 +1,4 @@
 import random
-from maze.Maze import Maze
 
 
 class DFSGenerator:
@@ -27,6 +26,27 @@ class DFSGenerator:
                     neighbors.append((nx, ny))
         return neighbors
 
+    def draw_42(self):
+        pattern = [
+            [15, 0, 0, 0, 15, 15, 15],
+            [15, 0, 0, 0, 0, 0, 15],
+            [15, 0, 0, 0, 0, 0, 15],
+            [15, 15, 15, 0, 15, 15, 15],
+            [0, 0, 15, 0, 15, 0, 0],
+            [0, 0, 15, 0, 15, 0, 0],
+            [0, 0, 15, 0, 15, 15, 15]
+        ]
+        x = self.maze.width // 2 - len(pattern[0]) // 2
+        y = self.maze.height // 2 - len(pattern) // 2
+        for i in range(len(pattern)):
+            for j in range(len(pattern[0])):
+                cell = self.maze.get_cell(x + j, y + i)
+                # cell.walls = pattern[i][j]
+                # if cell.walls == 15:
+                #     cell.blocked = True
+                if pattern[i][j] == 15:
+                    cell.visited = True
+
     def _dfs(self, x, y):
         cell = self.maze.get_cell(x, y)
         cell.visited = True
@@ -39,9 +59,10 @@ class DFSGenerator:
                 self.maze.remove_wall_between(x, y, nx, ny)
                 self._dfs(nx, ny)
 
+# maze = Maze(11, 20, (0, 0), (10, 10))
+# dfs = DFSGenerator(maze)
+# dfs.draw_42()
 
-maze = Maze(11, 20, (0, 0), (10, 10))
-dfs = DFSGenerator(maze)
-dfs.generate()
-for row in maze.grid:
-    print([cell.walls for cell in row])
+# dfs.generate()
+# for row in maze.grid:
+#     print([cell.walls for cell in row])
