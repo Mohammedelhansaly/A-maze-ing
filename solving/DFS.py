@@ -28,24 +28,22 @@ class DFSGenerator:
 
     def draw_42(self):
         pattern = [
-            [15, 0, 0, 0, 15, 15, 15],
-            [15, 0, 0, 0, 0, 0, 15],
-            [15, 0, 0, 0, 0, 0, 15],
-            [15, 15, 15, 0, 15, 15, 15],
-            [0, 0, 15, 0, 15, 0, 0],
-            [0, 0, 15, 0, 15, 0, 0],
-            [0, 0, 15, 0, 15, 15, 15]
+            [1, 0, 0, 1, 1],
+            [1, 0, 0, 0, 1],
+            [1, 1, 0, 1, 1],
+            [0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 1],
         ]
-        x = self.maze.width // 2 - len(pattern[0]) // 2
-        y = self.maze.height // 2 - len(pattern) // 2
+        x = self.maze.width // 2 - len(pattern[0])
+        y = self.maze.height // 2 - len(pattern)
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
                 cell = self.maze.get_cell(x + j, y + i)
                 # cell.walls = pattern[i][j]
                 # if cell.walls == 15:
                 #     cell.blocked = True
-                if pattern[i][j] == 15:
-                    cell.visited = True
+                if pattern[i][j] == 1:
+                    cell.blocked = True
 
     def _dfs(self, x, y):
         cell = self.maze.get_cell(x, y)
@@ -55,7 +53,7 @@ class DFSGenerator:
 
         for nx, ny in neighbors:
             neighbor_cell = self.maze.get_cell(nx, ny)
-            if not neighbor_cell.visited:
+            if not neighbor_cell.visited and not neighbor_cell.blocked:
                 self.maze.remove_wall_between(x, y, nx, ny)
                 self._dfs(nx, ny)
 

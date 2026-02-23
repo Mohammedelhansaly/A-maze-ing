@@ -6,36 +6,42 @@ class ValidateConnectivity3X3EREA:
         self.maze = maze
 
     def is_connected(self):
-        total = self.maze.width * self.maze.height
-        sx, sy = self.maze.entry
+        # sx, sy = self.maze.entry
         queue = deque()
-        queue.append((sx, sy))
         visited = set()
-        visited.add((sx, sy))
+        start = None
+        for y in range(self.maze.height):
+            for x in range(self.maze.width):
+                cell = self.maze.get_cell(x, y)
+                if not cell.blocked:
+                    start = (x, y)
+                    break
+            if start:
+                break
+        if start is None:
+            return False
+        queue.append(start)
+        visited.add(start)
 
         while queue:
             x, y = queue.popleft()
             cell = self.maze.get_cell(x, y)
-            if not cell.has_wall(1):
-                nx, ny = x, y - 1
-                if (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    queue.append((nx, ny))
-            if not cell.has_wall(2):
-                nx, ny = x + 1, y
-                if (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    queue.append((nx, ny))
-            if not cell.has_wall(4):
-                nx, ny = x, y + 1
-                if (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    queue.append((nx, ny))
-            if not cell.has_wall(8):
-                nx, ny = x - 1, y
-                if (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    queue.append((nx, ny))
+            for dx, dy, wall in [(0, -1, 1), (0, 1, 4), (1, 0, 2), (-1, 0, 8)]:
+                nx = x + dx
+                ny = y + dy
+                if 0 <= nx < self.maze.width and 0 <= ny < self.maze.height:
+                    neighbor = self.maze.get_cell(nx, ny)
+                    if getattr(neighbor, "blocked", False):
+                        continue
+                    if not (cell.walls & wall):
+                        if (nx, ny) not in visited:
+                            visited.add((nx, ny))
+                            queue.append((nx, ny))
+        total = 0
+        for y in range(self.maze.height):
+            for x in range(self.maze.width):
+                if not getattr(self.maze.get_cell(x, y), "blocked", False):
+                    total += 1
         return len(visited) == total
 
     def open_erea3X3(self):

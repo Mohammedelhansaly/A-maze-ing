@@ -41,13 +41,14 @@ class MazeWriter:
 
 
 try:
-    mazevalidate = mazeValidator(width=11, height=20, entry=(1, 1),
-                                 exit_=(3, 3))
+    mazevalidate = mazeValidator(width=25, height=20, entry=(1, 1),
+                                 exit_=(19, 14))
     maze = Maze(mazevalidate.width, mazevalidate.height, mazevalidate.entry,
                 mazevalidate.exit_)
-    dfs = DFSGenerator(maze)
+    dfs = DFSGenerator(maze, seed=42)
     dfs.draw_42()
     dfs.generate()
+
     for row in maze.grid:
         print([cell.walls for cell in row])
     solver = BSFSolver(maze)
@@ -57,6 +58,8 @@ try:
         raise ValueError("Maze is not fully connected")
     if not validate.open_erea3X3():
         raise ValueError("Maze contains open 3x3 area")
+    # if not validate.is_perfect():
+    #     raise ValueError("maze is not perfect")
     writer = MazeWriter(maze, path)
     writer.write_config("maze_output.txt")
 except ValidationError as e:
