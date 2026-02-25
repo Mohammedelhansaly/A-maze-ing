@@ -1,10 +1,3 @@
-from maze.Maze import Maze
-from solving.DFS import DFSGenerator
-from solving.BFS import BSFSolver
-from validation.maze_validator import mazeValidator
-from validation.validate_connectivity import ValidateConnectivity3X3EREA
-from pydantic import ValidationError
-
 
 class MazeWriter:
     def __init__(self, maze, path):
@@ -38,32 +31,3 @@ class MazeWriter:
             filename.write(f"\n{self.maze.entry[0]},{self.maze.entry[1]}\n")
             filename.write(f"{self.maze.exit[0]},{self.maze.exit[1]}\n")
             filename.write(f"{self.write_path()}\n")
-
-
-try:
-    mazevalidate = mazeValidator(width=25, height=20, entry=(1, 1),
-                                 exit_=(19, 14))
-    maze = Maze(mazevalidate.width, mazevalidate.height, mazevalidate.entry,
-                mazevalidate.exit_)
-    dfs = DFSGenerator(maze, seed=42)
-    dfs.draw_42()
-    dfs.generate()
-
-    for row in maze.grid:
-        print([cell.walls for cell in row])
-    solver = BSFSolver(maze)
-    path = solver.BFS()
-    validate = ValidateConnectivity3X3EREA(maze)
-    if not validate.is_connected():
-        raise ValueError("Maze is not fully connected")
-    if not validate.open_erea3X3():
-        raise ValueError("Maze contains open 3x3 area")
-    # if not validate.is_perfect():
-    #     raise ValueError("maze is not perfect")
-    writer = MazeWriter(maze, path)
-    writer.write_config("maze_output.txt")
-except ValidationError as e:
-    for error in e.errors():
-        print(error['msg'])
-except ValueError as e:
-    print(e)
