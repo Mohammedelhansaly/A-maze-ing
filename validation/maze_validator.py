@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field, model_validator, field_validator
 
 
 class mazeValidator(BaseModel):
-    width: int = Field(..., gt=3, lt=100)
-    height: int = Field(..., gt=3, lt=100)
+    width: int = Field(..., gt=5, lt=100)
+    height: int = Field(..., gt=5, lt=100)
     entry: tuple[int, int]
     exit_: tuple[int, int]
 
