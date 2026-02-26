@@ -46,7 +46,8 @@ class ConfigValidation:
         for line in clean_lines:
             if "=" not in line or line.count("=") != 1:
                 raise ValueError("Each line must contain exactly one '='")
-
+            if " " in line:
+                raise ValueError("No spaces allowed in key-value pairs")
             key, value = line.split("=")
             key = key.strip().lower()
             value = value.strip()
@@ -75,7 +76,9 @@ class ConfigValidation:
                 config["output_file"] = value
 
             elif key == "perfect":
-                config["perfect"] = value.lower() == "true"
+                if value.lower() not in {"true", "false"}:
+                    raise ValueError("Perfect must be 'true' or 'false'")
+                config["perfect"] = value.lower()
 
         # Check required keys exist
         missing = self.REQUIRED_KEYS - config.keys()

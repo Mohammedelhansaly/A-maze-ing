@@ -2,11 +2,12 @@ import sys
 from config_validation.config_validation import ConfigValidation
 from maze.Maze import Maze
 from validation.maze_validator import mazeValidator
-from solving.DFS import DFSGenerator
+from generation.DFS import DFSGenerator
 from solving.BFS import BSFSolver
 from validation.validate_connectivity import ValidateConnectivity3X3EREA
 from output.output_writer import MazeWriter
 from pydantic import ValidationError
+from generation.RandomGenerator import RandomGenerator
 
 
 def main():
@@ -21,9 +22,12 @@ def main():
                     mazevalidate.entry,
                     mazevalidate.exit_)
         dfs = DFSGenerator(maze, seed=config.get('seed'))
+        randomgenerator = RandomGenerator(maze, seed=config.get('seed'))
         dfs.draw_42()
-        dfs.generate()
-
+        if config.get('perfect'):
+            dfs.generate()
+        else:
+            randomgenerator.generate()
         for row in maze.grid:
             print([cell.walls for cell in row])
         solver = BSFSolver(maze)

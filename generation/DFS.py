@@ -34,8 +34,8 @@ class DFSGenerator:
             [0, 1, 0, 1, 0],
             [0, 1, 0, 1, 1],
         ]
-        x = self.maze.width // 2 - len(pattern[0])
-        y = self.maze.height // 2 - len(pattern)
+        x = self.maze.width // 2 - len(pattern[0]) + len(pattern[0]) // 2
+        y = self.maze.height // 2 - len(pattern) + len(pattern) // 2
         for i in range(len(pattern)):
             for j in range(len(pattern[0])):
                 cell = self.maze.get_cell(x + j, y + i)
