@@ -8,6 +8,7 @@ from validation.validate_connectivity import ValidateConnectivity3X3EREA
 from output.output_writer import MazeWriter
 from pydantic import ValidationError
 from generation.RandomGenerator import RandomGenerator
+from generation.Pattern42 import Pattern42
 
 
 def main():
@@ -21,12 +22,13 @@ def main():
         maze = Maze(mazevalidate.width, mazevalidate.height,
                     mazevalidate.entry,
                     mazevalidate.exit_)
-        dfs = DFSGenerator(maze, seed=config.get('seed'))
-        randomgenerator = RandomGenerator(maze, seed=config.get('seed'))
-        dfs.draw_42()
-        if config.get('perfect'):
+        pattern42 = Pattern42(maze)
+        pattern42.draw()
+        if config['perfect']:
+            dfs = DFSGenerator(maze, seed=config.get('seed'))
             dfs.generate()
         else:
+            randomgenerator = RandomGenerator(maze, seed=config.get('seed'))
             randomgenerator.generate()
         for row in maze.grid:
             print([cell.walls for cell in row])

@@ -78,7 +78,7 @@ class ConfigValidation:
             elif key == "perfect":
                 if value.lower() not in {"true", "false"}:
                     raise ValueError("Perfect must be 'true' or 'false'")
-                config["perfect"] = value.lower()
+                config["perfect"] = value.lower() == "true"
 
         # Check required keys exist
         missing = self.REQUIRED_KEYS - config.keys()

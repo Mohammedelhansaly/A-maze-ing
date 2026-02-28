@@ -1,5 +1,5 @@
 PYTHON = python3
-VENV_NAME = mazevenev
+VENV_NAME = mazevenv
 DEPENDECIES = requirement.txt
 MAIN = a_maze_ing.py
 CONFIG_FILE = config.txt
