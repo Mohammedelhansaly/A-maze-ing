@@ -1,13 +1,14 @@
 from collections import deque
+from maze.Maze import Maze
 
 
 class ValidateConnectivity3X3EREA:
-    def __init__(self, maze):
+    def __init__(self, maze: Maze) -> None:
         self.maze = maze
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         # sx, sy = self.maze.entry
-        queue = deque()
+        queue: deque = deque()
         visited = set()
         start = None
         for y in range(self.maze.height):
@@ -44,7 +45,7 @@ class ValidateConnectivity3X3EREA:
                     total += 1
         return len(visited) == total
 
-    def open_erea3X3(self):
+    def open_erea3X3(self) -> bool:
         for y in range(1, self.maze.height - 1):
             for x in range(1, self.maze.width - 1):
                 open_count = 0

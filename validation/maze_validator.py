@@ -9,14 +9,14 @@ class mazeValidator(BaseModel):
 
     @field_validator("entry", "exit_")
     @classmethod
-    def validate_cordinate(cls, v):
+    def validate_cordinate(cls, v: tuple[int, int]) -> tuple[int, int]:
         x, y = v
         if x < 0 and y < 0:
             raise ValueError("cordinates must be non-negative")
         return v
 
     @model_validator(mode="after")
-    def validate_entry_exit(self):
+    def validate_entry_exit(self) -> "mazeValidator":
         if not (0 <= self.entry[0] < self.width and
                 0 <= self.entry[1] < self.height):
             raise ValueError("Entry point is out of maze bounds")

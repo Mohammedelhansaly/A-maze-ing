@@ -1,16 +1,18 @@
 import random
+from maze.Maze import Maze
+from typing import Optional
 
 
 class DFSGenerator:
-    def __init__(self, maze, seed=None) -> None:
+    def __init__(self, maze: Maze, seed: Optional[int] = None) -> None:
         self.maze = maze
         if seed is not None:
             random.seed(seed)
 
-    def generate(self):
+    def generate(self) -> None:
         self._dfs(0, 0)
 
-    def get_unvisted_neignbors(self, x, y):
+    def get_unvisted_neignbors(self, x: int, y: int) -> list:
         neighbors = []
         direction = [
             (0, -1),
@@ -45,7 +47,7 @@ class DFSGenerator:
     #             if pattern[i][j] == 1:
     #                 cell.blocked = True
 
-    def _dfs(self, x, y):
+    def _dfs(self, x: int, y: int) -> None:
         cell = self.maze.get_cell(x, y)
         cell.visited = True
         neighbors = self.get_unvisted_neignbors(x, y)

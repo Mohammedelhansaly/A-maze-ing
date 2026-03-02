@@ -1,4 +1,15 @@
 from collections import Counter
+from typing import TypedDict, cast, Any
+
+
+class Config(TypedDict, total=False):
+    width: int
+    height: int
+    entry: tuple[int, int]
+    exit: tuple[int, int]
+    seed: int
+    output_file: str
+    perfect: bool
 
 
 class ConfigValidation:
@@ -13,17 +24,17 @@ class ConfigValidation:
 
     OPTIONAL_KEYS = {"seed"}
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         self.filename = filename
 
-    def validate(self):
+    def validate(self) -> dict:
         if not self.filename.endswith(".txt"):
             raise ValueError("Input file must be a .txt file")
 
         with open(self.filename, "r") as f:
             lines = f.readlines()
 
-        config = {}
+        config: Config = {}
 
         # Remove comments and empty lines
         clean_lines = []
@@ -62,10 +73,11 @@ class ConfigValidation:
                 config["height"] = int(value)
 
             elif key == "entry":
-                config["entry"] = tuple(map(int, value.split(",")))
-
+                x, y = map(int, value.split(","))
+                config["entry"] = (x, y)
             elif key == "exit":
-                config["exit"] = tuple(map(int, value.split(",")))
+                x, y = map(int, value.split(","))
+                config["exit"] = (x, y)
 
             elif key == "seed":
                 config["seed"] = int(value)
@@ -85,4 +97,4 @@ class ConfigValidation:
         if missing:
             raise ValueError(f"Missing required keys: {missing}")
 
-        return config
+        return cast(dict[Any, Any], config)

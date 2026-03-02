@@ -1,11 +1,13 @@
 from collections import deque
+from maze.Maze import Maze
+from typing import Optional
 
 
 class BSFSolver:
-    def __init__(self, maze):
+    def __init__(self, maze: Maze) -> None:
         self.maze = maze
 
-    def get_accessible_neighbors(self, x, y):
+    def get_accessible_neighbors(self, x: int, y: int) -> list:
         neighbors = []
         cell = self.maze.get_cell(x, y)
 
@@ -19,7 +21,8 @@ class BSFSolver:
             neighbors.append((x - 1, y))
         return neighbors
 
-    def reconstruct_path(self, parent, start, end):
+    def reconstruct_path(self, parent: dict, start: tuple[int, int],
+                         end: tuple[int, int]) -> list:
         path = []
         current = end
         while current != start:
@@ -29,13 +32,13 @@ class BSFSolver:
         path.reverse()
         return path
 
-    def BFS(self):
+    def BFS(self) -> Optional[list[tuple[int, int]]]:
         start = self.maze.entry
         end = self.maze.exit
         queue = deque([start])
         visited = set()
         visited.add(start)
-        parent = {}
+        parent: dict[tuple[int, int], tuple[int, int]] = {}
         while (queue):
             x, y = queue.popleft()
             if (x, y) == end:

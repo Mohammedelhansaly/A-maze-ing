@@ -3,7 +3,8 @@ from .Wall import N, E, S, W
 
 
 class Maze:
-    def __init__(self, width, height, entry, exit_):
+    def __init__(self, width: int, height: int, entry: tuple[int, int],
+                 exit_: tuple[int, int]) -> None:
         self.width = width
         self.height = height
         self.entry = entry
@@ -13,10 +14,10 @@ class Maze:
             for _ in range(height)
         ]
 
-    def get_cell(self, x, y):
+    def get_cell(self, x: int, y: int) -> Cell:
         return self.grid[y][x]
 
-    def remove_wall_between(self, x1, y1, x2, y2):
+    def remove_wall_between(self, x1: int, y1: int, x2: int, y2: int) -> None:
         cell1 = self.get_cell(x1, y1)
         cell2 = self.get_cell(x2, y2)
 
@@ -38,10 +39,10 @@ class Maze:
         else:
             raise ValueError("Cells are not adjacent")
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = ""
         for row in self.grid:
             for cell in row:
-                result += f" {cell.wall:2} "
+                result += f" {cell.walls:2} "
             result += "\n"
         return result

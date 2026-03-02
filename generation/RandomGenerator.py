@@ -1,15 +1,17 @@
 import random
 from .DFS import DFSGenerator
+from maze.Maze import Maze
+from typing import Optional
 
 
 class RandomGenerator:
-    def __init__(self, maze, seed=None):
+    def __init__(self, maze: Maze, seed: Optional[int] = None) -> None:
         self.maze = maze
         self.seed = seed
         if seed is not None:
             random.seed(seed)
 
-    def generate(self):
+    def generate(self) -> None:
         dfs = DFSGenerator(self.maze)
         dfs.generate()
         for _ in range((self.maze.width * self.maze.height) // 4):

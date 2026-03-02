@@ -1,10 +1,12 @@
+from maze.Maze import Maze
+
 
 class MazeWriter:
-    def __init__(self, maze, path):
+    def __init__(self, maze: Maze, path: list) -> None:
         self.maze = maze
         self.path = path
 
-    def write_path(self):
+    def write_path(self) -> str:
         path_str = []
         for i in range(1, len(self.path)):
             px, py = self.path[i - 1]
@@ -23,8 +25,8 @@ class MazeWriter:
                 raise ValueError("invalid path step")
         return "".join(path_str)
 
-    def write_config(self, filename):
-        with open(filename, "w") as filename:
+    def write_config(self, file: str) -> None:
+        with open(file, "w") as filename:
             for row in self.maze.grid:
                 line = "".join(hex(cell.walls)[2:].upper() for cell in row)
                 filename.write(line + "\n")

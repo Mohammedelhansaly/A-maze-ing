@@ -11,7 +11,7 @@ from generation.RandomGenerator import RandomGenerator
 from generation.Pattern42 import Pattern42
 
 
-def main():
+def main() -> None:
     try:
         validate_file = ConfigValidation(sys.argv[1])
         config = validate_file.validate()
@@ -41,7 +41,7 @@ def main():
             raise ValueError("Maze contains open 3x3 area")
         # if not validate.is_perfect():
         #     raise ValueError("maze is not perfect")
-        writer = MazeWriter(maze, path)
+        writer = MazeWriter(maze, path or [])
         writer.write_config(config['output_file'])
     except ValidationError as e:
         for error in e.errors():

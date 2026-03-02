@@ -1,5 +1,8 @@
+from maze.Maze import Maze
+
+
 class Pattern42:
-    def __init__(self, maze):
+    def __init__(self, maze: Maze) -> None:
         self.maze = maze
         self.pattern = [
             [1, 0, 0, 1, 1],
@@ -9,7 +12,7 @@ class Pattern42:
             [0, 1, 0, 1, 1],
         ]
 
-    def draw(self):
+    def draw(self) -> None:
         x = (self.maze.width // 2 - len(self.pattern[0]) +
              len(self.pattern[0]) // 2)
         y = self.maze.height // 2 - len(self.pattern) + len(self.pattern) // 2
