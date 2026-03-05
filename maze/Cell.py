@@ -10,5 +10,11 @@ class Cell:
     def remove_wall(self, direction: int) -> None:
         self.walls &= ~direction
 
+    def set_wall(self, walls: int) -> None:
+        self.walls = walls
+
     def __str__(self) -> str:
         return "Cell"
+
+    def remove_cell(self) -> None:
+        self.walls = 0

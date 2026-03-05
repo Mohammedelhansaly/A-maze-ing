@@ -39,6 +39,9 @@ class Maze:
         else:
             raise ValueError("Cells are not adjacent")
 
+    def in_bounds(self, x: int, y: int) -> bool:
+        return 0 <= x < self.width and 0 <= y < self.height
+
     def __str__(self) -> str:
         result = ""
         for row in self.grid:

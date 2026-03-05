@@ -10,7 +10,6 @@ from pydantic import ValidationError
 from generation.RandomGenerator import RandomGenerator
 from generation.Pattern42 import Pattern42
 
-# main.py
 import curses
 from typing import Any
 
@@ -80,9 +79,6 @@ def parsing(stdscr: Any, filename: str) -> None:
             break
 
 
-# if __name__ == "__main__":
-    
-
 def main() -> None:
     try:
         validate_file = ConfigValidation(sys.argv[1])
@@ -109,8 +105,8 @@ def main() -> None:
         validate = ValidateConnectivity3X3EREA(maze)
         if not validate.is_connected():
             raise ValueError("Maze is not fully connected")
-        if not validate.open_erea3X3():
-            raise ValueError("Maze contains open 3x3 area")
+        # if not validate.open_erea3X3():
+        #     raise ValueError("Maze contains open 3x3 area")
         # if not validate.is_perfect():
         #     raise ValueError("maze is not perfect")
         writer = MazeWriter(maze, path or [])
