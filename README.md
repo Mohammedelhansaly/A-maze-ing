@@ -56,3 +56,10 @@ Execute the following commands before running or committing your project
 ```bash
 make lint
 ```
+
+## Resources
+
+- [42 A-maze-ing Subject](https://cdn.intra.42.fr/pdf/pdf/200764/en.subject.pdf)
+- [DFS algorithm](https://www.geeksforgeeks.org/dsadepth-first-search-or-dfs-for-a-graph/)
+- [BFS algorithm](https://www.geeksforgeeks.org/dsa/breadth-first-search-or-bfs-for-a-graph/)
+- [Youtube](https://www.youtube.com/)

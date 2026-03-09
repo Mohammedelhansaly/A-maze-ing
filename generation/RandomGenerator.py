@@ -30,42 +30,58 @@ class RandomGenerator:
                     neighbors.append((nx, ny))
         return neighbors
 
-    def cell_open_neighbor(self, x1: int, y1: int) -> bool:
-        cell = self.maze.get_cell(x1, y1)
-        direction = [
+    def cell_open_neighbor(self, x: int, y: int) -> bool:
+        directions = [
             (0, -1),
             (0, 1),
             (1, 0),
             (-1, 0),
         ]
-        for dx, dy in direction:
-            nx = x1 + dx
-            ny = y1 + dy
+
+        for dx, dy in directions:
+            nx = x + dx
+            ny = y + dy
+
             if 0 <= nx < self.maze.width and 0 <= ny < self.maze.height:
-                neighbor_cell = self.maze.get_cell(nx, ny)
-                if neighbor_cell.visited and not cell.blocked and not neighbor_cell.blocked:
+                neighbor = self.maze.get_cell(nx, ny)
+
+                # neighbor is open
+                if not neighbor.blocked and neighbor.walls != 15:
                     return True
+
         return False
-    
-    def remove_isolated_wall(self, x, y):
+
+    def remove_isolated_wall(self, x: int, y: int):
         cell = self.maze.get_cell(x, y)
 
-        if not cell.visited:
+        # Only check closed cells
+        if cell.walls != 15:
             return
 
-        neighbors = [
-            (x - 1, y),  # left
-            (x + 1, y),  # right
-            (x, y - 1),  # top
-            (x, y + 1)   # bottom
+        directions = [
+            (0, -1),
+            (0, 1),
+            (1, 0),
+            (-1, 0),
         ]
 
-        for nx, ny in neighbors:
+        open_neighbors = 0
+
+        for dx, dy in directions:
+            nx = x + dx
+            ny = y + dy
+
             if 0 <= nx < self.maze.width and 0 <= ny < self.maze.height:
-                neighbor_cell = self.maze.get_cell(nx, ny)
-                if self.cell_open_neighbor(x, y):
-                    cell.visited = True
-                    break
+                neighbor = self.maze.get_cell(nx, ny)
+
+                # neighbor is open
+                if neighbor.visited and not neighbor.blocked and neighbor.walls != 15:
+                    open_neighbors += 1
+
+        # if all neighbors are open → open this cell
+        if open_neighbors == 4:
+            cell.set_wall(0)
+            cell.visited = True
 
     def generate(self) -> None:
         dfs = DFSGenerator(self.maze)
@@ -83,6 +99,6 @@ class RandomGenerator:
                 and not cell.blocked and not self.maze.get_cell(nx, ny).blocked
             ):
                 self.maze.remove_wall_between(x, y, nx, ny)
-        for x in range(self.maze.width):
-            for y in range(self.maze.height):
+        for y in range(self.maze.height):
+            for x in range(self.maze.width):
                 self.remove_isolated_wall(x, y)

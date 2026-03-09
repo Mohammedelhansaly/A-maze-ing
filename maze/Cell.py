@@ -15,6 +15,3 @@ class Cell:
 
     def __str__(self) -> str:
         return "Cell"
-
-    def remove_cell(self) -> None:
-        self.walls = 0
