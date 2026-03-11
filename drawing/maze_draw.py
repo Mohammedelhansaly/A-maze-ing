@@ -8,6 +8,7 @@ PATH_CHAR = ' '
 ENTRY_CHAR = 'E'
 EXIT_CHAR = 'X'
 SOLUTION_CHAR = '☀'
+CURSOR_CHAR = '★'
 
 # ---------- Header ----------
 HEADER_TEXT = "★ THE AMAZING MAZE ENGINE ★"
@@ -105,6 +106,38 @@ def rotate_theme() -> None:
     apply_theme()
 
 
+# ---------- Solution Path Helper ----------
+
+
+def _solution_screen_positions(
+    solution: List[Tuple[int, int]]
+) -> List[Tuple[int, int]]:
+    """
+    Convert maze solution coordinates into screen positions.
+
+    Includes intermediate corridor cells between consecutive maze cells so
+    that the drawn path appears fully connected rather than dotted.
+
+    Args:
+        solution: list of (x, y) maze cell coordinates
+
+    Returns:
+        List of (screen_y, screen_x) positions covering the full path.
+    """
+    positions: List[Tuple[int, int]] = []
+    for i, (x, y) in enumerate(solution):
+        positions.append((2 * y + 1, 2 * x + 1))
+        if i + 1 < len(solution):
+            nx, ny = solution[i + 1]
+            # Corridor cell that sits between the two adjacent maze cells on
+            # screen.  Consecutive solution cells are always neighbours so the
+            # midpoint formula below is exact and produces an integer result.
+            corridor_y = (2 * y + 1 + 2 * ny + 1) // 2  # == y + ny + 1
+            corridor_x = (2 * x + 1 + 2 * nx + 1) // 2  # == x + nx + 1
+            positions.append((corridor_y, corridor_x))
+    return positions
+
+
 # ---------- Maze Drawing ----------
 def draw_cell(stdscr: Any, maze: List[List[int]], y: int, x: int) -> None:
     """
@@ -167,21 +200,42 @@ def draw_maze(
     canvas_height = 2 * height + 1
     canvas_width = 2 * width + 1
 
-    # Animate full wall background
-    for y in range(canvas_height):
+    if animate_maze:
+        # Phase 1: Curtain sweep — fill walls column by column with a bright
+        # leading-edge highlight that settles to the normal wall colour.
         for x in range(canvas_width):
-            safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
-        if animate_maze:
+            for y in range(canvas_height):
+                safe_addstr(stdscr, y, x, WALL_CHAR,
+                            curses.color_pair(5) | curses.A_BOLD)
             stdscr.refresh()
-            curses.napms(40)
+            curses.napms(12)
+            for y in range(canvas_height):
+                safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
 
-    # Draw all cells
-    for y in range(height):
-        for x in range(width):
-            draw_cell(stdscr, maze, y, x)
-            if animate_maze:
+        # Phase 2: Carve maze cells row by row; each cell briefly flashes
+        # before being carved to give a "chisel" effect.
+        for y in range(height):
+            for x in range(width):
+                screen_y = 2 * y + 1
+                screen_x = 2 * x + 1
+                safe_addstr(stdscr, screen_y, screen_x, PATH_CHAR,
+                            curses.color_pair(5) | curses.A_BOLD)
                 stdscr.refresh()
-                curses.napms(10)
+                curses.napms(8)
+                draw_cell(stdscr, maze, y, x)
+            stdscr.refresh()
+            curses.napms(15)
+
+        stdscr.refresh()
+        curses.napms(120)  # Brief pause to appreciate the completed maze
+    else:
+        # Instant fill and carve (no animation)
+        for y in range(canvas_height):
+            for x in range(canvas_width):
+                safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
+        for y in range(height):
+            for x in range(width):
+                draw_cell(stdscr, maze, y, x)
 
     # Draw entry/exit
     entry_y, entry_x = 2 * entry_pos[1] + 1, 2 * entry_pos[0] + 1
@@ -199,13 +253,23 @@ def draw_maze(
 
     # Draw solution path
     if solution:
-        for x, y in solution:
-            sol_y, sol_x = 2 * y + 1, 2 * x + 1
-            safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
-                        curses.color_pair(4) | curses.A_BOLD)
-            if animate_solution:
+        path_positions = _solution_screen_positions(solution)
+        if animate_solution:
+            # A moving cursor (CURSOR_CHAR) travels the full path — including
+            # the corridor cells between maze cells — leaving solution markers
+            # as a connected trail behind it.
+            for sol_y, sol_x in path_positions:
+                safe_addstr(stdscr, sol_y, sol_x, CURSOR_CHAR,
+                            curses.color_pair(5) | curses.A_BOLD)
                 stdscr.refresh()
-                curses.napms(50)
+                curses.napms(40)
+                safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
+                            curses.color_pair(4) | curses.A_BOLD)
+            stdscr.refresh()
+        else:
+            for sol_y, sol_x in path_positions:
+                safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
+                            curses.color_pair(4) | curses.A_BOLD)
 
     stdscr.refresh()
 
