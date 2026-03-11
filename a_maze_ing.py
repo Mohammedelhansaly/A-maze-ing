@@ -145,8 +145,8 @@ def main() -> None:
             print("Usage: python3 main.py <maze_file.txt>")
             sys.exit(1)
 
-        maze, entry_pos, exit_pos = read_maze_file(config['output_file'])
-        if maze is None:
+        mazegrid, entry_pos, exit_pos = read_maze_file(config['output_file'])
+        if mazegrid is None:
             print("Malformed maze detected. Exiting.")
             sys.exit(1)
 

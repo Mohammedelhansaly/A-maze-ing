@@ -51,7 +51,7 @@ class RandomGenerator:
 
         return False
 
-    def remove_isolated_walls(self):
+    def remove_isolated_walls(self) -> None:
         for x in range(self.maze.width):
             for y in range(self.maze.height):
 
