@@ -9,6 +9,7 @@ from output.output_writer import MazeWriter
 from pydantic import ValidationError
 from generation.RandomGenerator import RandomGenerator
 from generation.Pattern42 import Pattern42
+from generation.PrimeGenerator import PrimeGenerator
 
 import curses
 from typing import Any
@@ -92,7 +93,13 @@ def main() -> None:
                     mazevalidate.exit_)
         pattern42 = Pattern42(maze)
         pattern42.draw()
-        if config['perfect']:
+        generator = config.get(
+            'generator', 'dfs' if config['perfect'] else 'random'
+        )
+        if generator == 'prime':
+            primegenerator = PrimeGenerator(maze, seed=config.get('seed'))
+            primegenerator.generate()
+        elif config['perfect']:
             dfs = DFSGenerator(maze, seed=config.get('seed'))
             dfs.generate()
         else:

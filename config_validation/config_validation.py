@@ -10,6 +10,7 @@ class Config(TypedDict, total=False):
     seed: int
     output_file: str
     perfect: bool
+    generator: str
 
 
 class ConfigValidation:
@@ -22,7 +23,7 @@ class ConfigValidation:
         "perfect",
     }
 
-    OPTIONAL_KEYS = {"seed"}
+    OPTIONAL_KEYS = {"seed", "generator"}
 
     def __init__(self, filename: str) -> None:
         self.filename = filename
@@ -91,6 +92,15 @@ class ConfigValidation:
                 if value.lower() not in {"true", "false"}:
                     raise ValueError("Perfect must be 'true' or 'false'")
                 config["perfect"] = value.lower() == "true"
+
+            elif key == "generator":
+                valid_generators = {"dfs", "random", "prime"}
+                if value.lower() not in valid_generators:
+                    raise ValueError(
+                        "Generator must be one of: "
+                        + ", ".join(sorted(valid_generators))
+                    )
+                config["generator"] = value.lower()
 
         # Check required keys exist
         missing = self.REQUIRED_KEYS - config.keys()
