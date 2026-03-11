@@ -1,6 +1,7 @@
 # maze_draw.py
 import curses
 from typing import Any, List, Optional, Tuple
+import sys
 
 # ---------- Characters ----------
 WALL_CHAR = '█'
@@ -12,7 +13,6 @@ SOLUTION_CHAR = '☀'
 # ---------- Header ----------
 HEADER_TEXT = "★ THE AMAZING MAZE ENGINE ★"
 
-# ---------- Color Themes ----------
 # ---------- Color Themes ----------
 # Format: (walls, entry, exit, solution, highlight)
 COLOR_THEMES: List[Tuple[int, int, int, int, int]] = [
@@ -166,6 +166,32 @@ def draw_maze(
     width = len(maze[0])
     canvas_height = 2 * height + 1
     canvas_width = 2 * width + 1
+
+    # ---- TERMINAL SIZE CHECK ----
+    term_h, term_w = stdscr.getmaxyx()
+
+    required_height = canvas_height + 8
+    required_width = canvas_width
+
+    if term_h < required_height or term_w < required_width:
+        stdscr.clear()
+
+        msg1 = "Terminal window too small for this maze"
+        msg2 = f"Required: {required_width}x{required_height}"
+        msg3 = f"Current:  {term_w}x{term_h}"
+        msg4 = "Press any key to quit..."
+
+        safe_addstr(stdscr, 2, 2, msg1, curses.A_BOLD)
+        safe_addstr(stdscr, 4, 2, msg2)
+        safe_addstr(stdscr, 5, 2, msg3)
+        safe_addstr(stdscr, 7, 2, msg4)
+
+        stdscr.refresh()
+        stdscr.getch()
+
+        curses.endwin()
+        sys.exit(0)
+        # ---- END CHECK ----
 
     # Animate full wall background
     for y in range(canvas_height):

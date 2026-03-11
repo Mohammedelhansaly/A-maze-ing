@@ -1,59 +1,51 @@
-# maze_io.py
 from typing import List, Tuple
 
 
 def read_maze_file(
-    filename: str,
-) -> Tuple[List[List[int]], Tuple[int, int], Tuple[int, int]]:
+    filename: str
+) -> Tuple[
+    List[List[int]],
+    Tuple[int, int],
+    Tuple[int, int],
+]:
     """
     Read a maze file and return the maze grid, entry, and exit positions.
-
-    Maze file format:
-      - Grid of hex characters (0-F) representing wall bits
-      - Empty line
-      - Entry coordinates: x,y
-      - Exit coordinates: x,y
-
-    Returns:
-      maze: 2D list of integers
-      entry_pos: (x, y)
-      exit_pos: (x, y)
+    Raises ValueError if the maze is malformed.
     """
     maze: List[List[int]] = []
-    entry_pos: Tuple[int, int] = (0, 0)
-    exit_pos: Tuple[int, int] = (0, 0)
 
-    # Read all lines and strip whitespace
     with open(filename, 'r', encoding='utf-8') as f:
-        lines = [line.strip() for line in f]
+        lines = [line.rstrip() for line in f]
 
-    # Separate grid and metadata
-    grid_lines = []
-    metadata_lines = []
-    empty_line_found = False
+    # Find empty line separating grid and metadata
+    try:
+        empty_index = lines.index('')
+    except ValueError:
+        raise ValueError("Maze file missing empty line separator")
 
-    for line in lines:
-        if not line:
-            empty_line_found = True
-            continue
-        if not empty_line_found:
-            grid_lines.append(line)
-        else:
-            metadata_lines.append(line)
+    grid_lines = lines[:empty_index]
+    metadata_lines = lines[empty_index + 1:]
 
-    # Parse grid lines as hex numbers
+    if len(metadata_lines) < 2:
+        raise ValueError("Maze file missing entry/exit lines")
+
+    # Parse grid
     for line in grid_lines:
         row = [int(c, 16) for c in line]
         maze.append(row)
 
-    # --- Sanity check: all rows same length ---
+    # Ensure all rows have same length
     row_lengths = [len(row) for row in maze]
     if min(row_lengths) != max(row_lengths):
-        return None, None, None
+        raise ValueError("Malformed maze: inconsistent row lengths")
 
-    # Parse entry / exit from metadata
-    if len(metadata_lines) >= 2:
-        entry_pos = tuple(map(int, metadata_lines[0].split(',')))
-        exit_pos = tuple(map(int, metadata_lines[1].split(',')))
+    # Parse entry/exit
+    entry_parts = metadata_lines[0].split(',')
+    exit_parts = metadata_lines[1].split(',')
+    if len(entry_parts) != 2 or len(exit_parts) != 2:
+        raise ValueError("Entry/exit must have 2 coordinates")
+
+    entry_pos: Tuple[int, int] = (int(entry_parts[0]), int(entry_parts[1]))
+    exit_pos: Tuple[int, int] = (int(exit_parts[0]), int(exit_parts[1]))
 
     return maze, entry_pos, exit_pos

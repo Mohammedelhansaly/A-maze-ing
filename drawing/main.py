@@ -3,9 +3,9 @@ import sys
 import curses
 from typing import Any
 
-from maze_io import read_maze_file
-from maze_solver import solve_maze
-from maze_draw import draw_maze, draw_menu, apply_theme, rotate_theme
+from drawing.maze_io import read_maze_file
+from drawing.maze_solver import solve_maze
+from drawing.maze_draw import draw_maze, draw_menu, apply_theme, rotate_theme
 
 
 def main(stdscr: Any, filename: str) -> None:
