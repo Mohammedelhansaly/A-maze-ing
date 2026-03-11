@@ -105,6 +105,38 @@ def rotate_theme() -> None:
     apply_theme()
 
 
+# ---------- Solution Path Helper ----------
+
+
+def _solution_screen_positions(
+    solution: List[Tuple[int, int]]
+) -> List[Tuple[int, int]]:
+    """
+    Convert maze solution coordinates into screen positions.
+
+    Includes intermediate corridor cells between consecutive maze cells so
+    that the drawn path appears fully connected rather than dotted.
+
+    Args:
+        solution: list of (x, y) maze cell coordinates
+
+    Returns:
+        List of (screen_y, screen_x) positions covering the full path.
+    """
+    positions: List[Tuple[int, int]] = []
+    for i, (x, y) in enumerate(solution):
+        positions.append((2 * y + 1, 2 * x + 1))
+        if i + 1 < len(solution):
+            nx, ny = solution[i + 1]
+            # Corridor cell that sits between the two adjacent maze cells on
+            # screen.  Consecutive solution cells are always neighbours so the
+            # midpoint formula below is exact and produces an integer result.
+            corridor_y = (2 * y + 1 + 2 * ny + 1) // 2  # == y + ny + 1
+            corridor_x = (2 * x + 1 + 2 * nx + 1) // 2  # == x + nx + 1
+            positions.append((corridor_y, corridor_x))
+    return positions
+
+
 # ---------- Maze Drawing ----------
 def draw_cell(stdscr: Any, maze: List[List[int]], y: int, x: int) -> None:
     """
@@ -140,6 +172,91 @@ def draw_cell(stdscr: Any, maze: List[List[int]], y: int, x: int) -> None:
         safe_addstr(stdscr, screen_y, screen_x - 1, PATH_CHAR)
 
 
+def animate_generation(
+    stdscr: Any,
+    steps: List[Tuple[int, int, int, int]],
+    height: int,
+    width: int,
+    entry_pos: Tuple[int, int],
+    exit_pos: Tuple[int, int],
+) -> None:
+    """
+    Animate maze generation cell by cell, replaying DFS wall-removal steps.
+
+    Starts from a solid wall background and carves passages one step at a
+    time, highlighting the DFS frontier with a cursor character so the
+    exploration tree is clearly visible as it grows.
+
+    Args:
+        stdscr: curses window object
+        steps: ordered list of (x1, y1, x2, y2) wall-removal events
+        height: maze height in cells
+        width: maze width in cells
+        entry_pos: (x, y) entry coordinates
+        exit_pos: (x, y) exit coordinates
+    """
+    # Wall bitmask constants (N=1, E=2, S=4, W=8)
+    N, E, S, W = 1, 2, 4, 8
+
+    stdscr.clear()
+    canvas_height = 2 * height + 1
+    canvas_width = 2 * width + 1
+
+    # Fill solid wall background
+    for cy in range(canvas_height):
+        for cx in range(canvas_width):
+            safe_addstr(stdscr, cy, cx, WALL_CHAR, curses.color_pair(1))
+
+    # Draw header
+    header_y = canvas_height + 1
+    header_x = max(0, (canvas_width - len(HEADER_TEXT)) // 2)
+    safe_addstr(stdscr, header_y, header_x, HEADER_TEXT,
+                curses.color_pair(1) | curses.A_BOLD)
+    stdscr.refresh()
+
+    # Local wall state — starts fully walled (15 = N|E|S|W)
+    local: List[List[int]] = [[15] * width for _ in range(height)]
+
+    for x1, y1, x2, y2 in steps:
+        dx = x2 - x1
+        dy = y2 - y1
+
+        # Update local wall state to reflect this removal
+        if dx == 1:
+            local[y1][x1] &= ~E
+            local[y2][x2] &= ~W
+        elif dx == -1:
+            local[y1][x1] &= ~W
+            local[y2][x2] &= ~E
+        elif dy == 1:
+            local[y1][x1] &= ~S
+            local[y2][x2] &= ~N
+        elif dy == -1:
+            local[y1][x1] &= ~N
+            local[y2][x2] &= ~S
+
+        # Flash the newly-reached cell as the DFS frontier
+        # safe_addstr(stdscr, 2 * y2 + 1, 2 * x2 + 1, CURSOR_CHAR,
+        #             curses.color_pair(5) | curses.A_BOLD)
+        # stdscr.refresh()
+        # curses.napms(15)
+
+        # Carve both affected cells
+        draw_cell(stdscr, local, y1, x1)
+        draw_cell(stdscr, local, y2, x2)
+        stdscr.refresh()
+
+    # Draw entry / exit markers
+    entry_y, entry_x = 2 * entry_pos[1] + 1, 2 * entry_pos[0] + 1
+    exit_y, exit_x = 2 * exit_pos[1] + 1, 2 * exit_pos[0] + 1
+    safe_addstr(stdscr, entry_y, entry_x, ENTRY_CHAR,
+                curses.color_pair(2) | curses.A_BOLD)
+    safe_addstr(stdscr, exit_y, exit_x, EXIT_CHAR,
+                curses.color_pair(3) | curses.A_BOLD)
+    stdscr.refresh()
+    curses.napms(200)  # Brief pause after generation completes
+
+
 def draw_maze(
     stdscr: Any,
     maze: List[List[int]],
@@ -167,21 +284,42 @@ def draw_maze(
     canvas_height = 2 * height + 1
     canvas_width = 2 * width + 1
 
-    # Animate full wall background
-    for y in range(canvas_height):
+    if animate_maze:
+        # Phase 1: Curtain sweep — fill walls column by column with a bright
+        # leading-edge highlight that settles to the normal wall colour.
         for x in range(canvas_width):
-            safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
-        if animate_maze:
+            for y in range(canvas_height):
+                safe_addstr(stdscr, y, x, WALL_CHAR,
+                            curses.color_pair(5) | curses.A_BOLD)
             stdscr.refresh()
-            curses.napms(40)
+            curses.napms(12)
+            for y in range(canvas_height):
+                safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
 
-    # Draw all cells
-    for y in range(height):
-        for x in range(width):
-            draw_cell(stdscr, maze, y, x)
-            if animate_maze:
+        # Phase 2: Carve maze cells row by row; each cell briefly flashes
+        # before being carved to give a "chisel" effect.
+        for y in range(height):
+            for x in range(width):
+                screen_y = 2 * y + 1
+                screen_x = 2 * x + 1
+                safe_addstr(stdscr, screen_y, screen_x, PATH_CHAR,
+                            curses.color_pair(5) | curses.A_BOLD)
                 stdscr.refresh()
-                curses.napms(10)
+                curses.napms(8)
+                draw_cell(stdscr, maze, y, x)
+            stdscr.refresh()
+            curses.napms(15)
+
+        stdscr.refresh()
+        curses.napms(120)  # Brief pause to appreciate the completed maze
+    else:
+        # Instant fill and carve (no animation)
+        for y in range(canvas_height):
+            for x in range(canvas_width):
+                safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
+        for y in range(height):
+            for x in range(width):
+                draw_cell(stdscr, maze, y, x)
 
     # Draw entry/exit
     entry_y, entry_x = 2 * entry_pos[1] + 1, 2 * entry_pos[0] + 1
@@ -199,13 +337,21 @@ def draw_maze(
 
     # Draw solution path
     if solution:
-        for x, y in solution:
-            sol_y, sol_x = 2 * y + 1, 2 * x + 1
-            safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
-                        curses.color_pair(4) | curses.A_BOLD)
-            if animate_solution:
+        path_positions = _solution_screen_positions(solution)
+        if animate_solution:
+            # A moving cursor (CURSOR_CHAR) travels the full path — including
+            # the corridor cells between maze cells — leaving solution markers
+            # as a connected trail behind it.
+            for sol_y, sol_x in path_positions:
+                safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
+                            curses.color_pair(4) | curses.A_BOLD)
                 stdscr.refresh()
-                curses.napms(50)
+                curses.napms(40)
+            stdscr.refresh()
+        else:
+            for sol_y, sol_x in path_positions:
+                safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
+                            curses.color_pair(4) | curses.A_BOLD)
 
     stdscr.refresh()
 
@@ -215,7 +361,8 @@ MENU_ITEMS = [
     "1 - Re-generate maze",
     "2 - Show / Animate solution path",
     "3 - Rotate maze colors",
-    "4 - Quit"
+    "4 - change algo",
+    "5 - Quit",
 ]
 
 
@@ -235,5 +382,5 @@ def draw_menu(stdscr: Any, maze_height: int) -> None:
         safe_addstr(stdscr, start_y + i, start_x, item)
 
     safe_addstr(stdscr, start_y + len(MENU_ITEMS) + 1,
-                start_x, "Choice (1-4): ")
+                start_x, "Choice (1-5): ")
     stdscr.refresh()

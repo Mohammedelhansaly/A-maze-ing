@@ -9,6 +9,8 @@ from output.output_writer import MazeWriter
 from pydantic import ValidationError
 from generation.RandomGenerator import RandomGenerator
 from generation.Pattern42 import Pattern42
+from generation.PRIME import PrimeGenerator
+
 
 import curses
 from typing import Any
@@ -55,13 +57,28 @@ def parsing(stdscr: Any, filename: str) -> None:
 
         # Reset animation flag after first run
         animate_solution = False
-
+        change_algo = True
         # Wait for user input
         key = stdscr.getch()
-
+        validate_file = ConfigValidation(sys.argv[1])
+        config = validate_file.validate()
+        maze1 = Maze(config['width'], config['height'],
+                     config['entry'],
+                     config['exit'])
+        pattern42 = Pattern42(maze1)
+        pattern42.draw()
         if key == ord('1'):
             # Re-generate maze
-            maze, entry_pos, exit_pos = read_maze_file(filename)
+            if config['perfect']:
+                dfs = DFSGenerator(maze1, seed=config.get('seed'))
+                dfs.generate()
+            else:
+                randomgenerator = RandomGenerator(maze1,
+                                                  seed=config.get('seed'))
+                randomgenerator.generate()
+            write = MazeWriter(maze1, [])
+            write.write_config(config['output_file'])
+            maze, entry_pos, exit_pos = read_maze_file(config['output_file'])
             solution = solve_maze(maze, entry_pos, exit_pos)
             draw_maze(stdscr, maze, entry_pos, exit_pos, animate_maze=True)
 
@@ -75,7 +92,20 @@ def parsing(stdscr: Any, filename: str) -> None:
             rotate_theme()
 
         elif key == ord('4'):
-            # Quit program
+            if change_algo:
+                dfs = DFSGenerator(maze1, seed=config.get('seed'))
+                dfs.generate()
+                change_algo = False
+            else:
+                prime = PrimeGenerator(maze1, seed=config.get('seed'))
+                prime.generate()
+                change_algo = True
+            write = MazeWriter(maze1, [])
+            write.write_config(config['output_file'])
+            maze, entry_pos, exit_pos = read_maze_file(config['output_file'])
+            solution = solve_maze(maze, entry_pos, exit_pos)
+            draw_maze(stdscr, maze, entry_pos, exit_pos, animate_maze=True)
+        elif key == ord('5'):
             break
 
 

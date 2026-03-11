@@ -1,40 +1,22 @@
-# maze_solver.py
+from typing import List, Tuple, Optional
 from collections import deque
-from typing import List, Tuple
 
 
 def solve_maze(
-    maze: List[List[int]], entry_pos: Tuple[int, int],
-        exit_pos: Tuple[int, int]
+    maze: List[List[int]],
+    entry_pos: Tuple[int, int],
+    exit_pos: Tuple[int, int],
 ) -> List[Tuple[int, int]]:
-    """
-    Solve a maze using BFS and return the path from entry to exit.
-
-    Maze cells use bitmask:
-      1 → North wall
-      2 → East wall
-      4 → South wall
-      8 → West wall
-
-    Args:
-        maze: 2D list of integers representing maze walls.
-        entry_pos: (x, y) tuple for maze entry.
-        exit_pos: (x, y) tuple for maze exit.
-
-    Returns:
-        List of (x, y) tuples representing the path. Entry and exit are
-        removed for animation purposes.
-    """
     height = len(maze)
     width = len(maze[0])
 
     queue = deque([entry_pos])
-    visited = {entry_pos: None}
+    visited: dict[Tuple[int, int],
+                  Optional[Tuple[int, int]]] = {entry_pos: None}
 
     # BFS traversal
     while queue:
         x, y = queue.popleft()
-
         if (x, y) == exit_pos:
             break
 
@@ -49,25 +31,23 @@ def solve_maze(
         ]
 
         for dx, dy, wall_bit in directions:
-            if not (cell & wall_bit):  # Open wall
+            if not (cell & wall_bit):
                 nx, ny = x + dx, y + dy
-                if (
-                        0 <= nx < width
-                        and 0 <= ny < height
+                if (0 <= nx < width and 0 <= ny < height
                         and (nx, ny) not in visited):
                     visited[(nx, ny)] = (x, y)
                     queue.append((nx, ny))
 
     # Reconstruct path from exit to entry
     path: List[Tuple[int, int]] = []
-    node = exit_pos
+    node: Optional[Tuple[int, int]] = exit_pos  # <-- mark as Optional
 
     if node not in visited:
         return []  # No path found
 
-    while node:
+    while node is not None:
         path.append(node)
-        node = visited[node]
+        node = visited[node]  # visited[node] can be None
 
     path.reverse()
 
