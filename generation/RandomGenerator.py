@@ -2,7 +2,7 @@ import random
 import sys
 from .DFS import DFSGenerator
 from maze.Maze import Maze
-from typing import Optional
+from typing import List, Optional, Tuple
 
 sys.setrecursionlimit(10**6)
 
@@ -11,6 +11,7 @@ class RandomGenerator:
     def __init__(self, maze: Maze, seed: Optional[int] = None) -> None:
         self.maze = maze
         self.seed = seed
+        self.steps: List[Tuple[int, int, int, int]] = []
         if seed is not None:
             random.seed(seed)
 
@@ -75,7 +76,8 @@ class RandomGenerator:
                 neighbor = self.maze.get_cell(nx, ny)
 
                 # neighbor is open
-                if neighbor.visited and not neighbor.blocked and neighbor.walls != 15:
+                if (neighbor.visited and not neighbor.blocked
+                        and neighbor.walls != 15):
                     open_neighbors += 1
 
         # if all neighbors are open → open this cell
@@ -86,6 +88,7 @@ class RandomGenerator:
     def generate(self) -> None:
         dfs = DFSGenerator(self.maze)
         dfs.generate()
+        self.steps = list(dfs.steps)
         for _ in range((self.maze.width * self.maze.height) // 4):
             x = random.randint(0, self.maze.width - 1)
             y = random.randint(0, self.maze.height - 1)
@@ -99,6 +102,7 @@ class RandomGenerator:
                 and not cell.blocked and not self.maze.get_cell(nx, ny).blocked
             ):
                 self.maze.remove_wall_between(x, y, nx, ny)
+                self.steps.append((x, y, nx, ny))
         for y in range(self.maze.height):
             for x in range(self.maze.width):
                 self.remove_isolated_wall(x, y)

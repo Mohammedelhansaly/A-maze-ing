@@ -173,6 +173,91 @@ def draw_cell(stdscr: Any, maze: List[List[int]], y: int, x: int) -> None:
         safe_addstr(stdscr, screen_y, screen_x - 1, PATH_CHAR)
 
 
+def animate_generation(
+    stdscr: Any,
+    steps: List[Tuple[int, int, int, int]],
+    height: int,
+    width: int,
+    entry_pos: Tuple[int, int],
+    exit_pos: Tuple[int, int],
+) -> None:
+    """
+    Animate maze generation cell by cell, replaying DFS wall-removal steps.
+
+    Starts from a solid wall background and carves passages one step at a
+    time, highlighting the DFS frontier with a cursor character so the
+    exploration tree is clearly visible as it grows.
+
+    Args:
+        stdscr: curses window object
+        steps: ordered list of (x1, y1, x2, y2) wall-removal events
+        height: maze height in cells
+        width: maze width in cells
+        entry_pos: (x, y) entry coordinates
+        exit_pos: (x, y) exit coordinates
+    """
+    # Wall bitmask constants (N=1, E=2, S=4, W=8)
+    N, E, S, W = 1, 2, 4, 8
+
+    stdscr.clear()
+    canvas_height = 2 * height + 1
+    canvas_width = 2 * width + 1
+
+    # Fill solid wall background
+    for cy in range(canvas_height):
+        for cx in range(canvas_width):
+            safe_addstr(stdscr, cy, cx, WALL_CHAR, curses.color_pair(1))
+
+    # Draw header
+    header_y = canvas_height + 1
+    header_x = max(0, (canvas_width - len(HEADER_TEXT)) // 2)
+    safe_addstr(stdscr, header_y, header_x, HEADER_TEXT,
+                curses.color_pair(1) | curses.A_BOLD)
+    stdscr.refresh()
+
+    # Local wall state — starts fully walled (15 = N|E|S|W)
+    local: List[List[int]] = [[15] * width for _ in range(height)]
+
+    for x1, y1, x2, y2 in steps:
+        dx = x2 - x1
+        dy = y2 - y1
+
+        # Update local wall state to reflect this removal
+        if dx == 1:
+            local[y1][x1] &= ~E
+            local[y2][x2] &= ~W
+        elif dx == -1:
+            local[y1][x1] &= ~W
+            local[y2][x2] &= ~E
+        elif dy == 1:
+            local[y1][x1] &= ~S
+            local[y2][x2] &= ~N
+        elif dy == -1:
+            local[y1][x1] &= ~N
+            local[y2][x2] &= ~S
+
+        # Flash the newly-reached cell as the DFS frontier
+        safe_addstr(stdscr, 2 * y2 + 1, 2 * x2 + 1, CURSOR_CHAR,
+                    curses.color_pair(5) | curses.A_BOLD)
+        stdscr.refresh()
+        curses.napms(15)
+
+        # Carve both affected cells
+        draw_cell(stdscr, local, y1, x1)
+        draw_cell(stdscr, local, y2, x2)
+        stdscr.refresh()
+
+    # Draw entry / exit markers
+    entry_y, entry_x = 2 * entry_pos[1] + 1, 2 * entry_pos[0] + 1
+    exit_y, exit_x = 2 * exit_pos[1] + 1, 2 * exit_pos[0] + 1
+    safe_addstr(stdscr, entry_y, entry_x, ENTRY_CHAR,
+                curses.color_pair(2) | curses.A_BOLD)
+    safe_addstr(stdscr, exit_y, exit_x, EXIT_CHAR,
+                curses.color_pair(3) | curses.A_BOLD)
+    stdscr.refresh()
+    curses.napms(200)  # Brief pause after generation completes
+
+
 def draw_maze(
     stdscr: Any,
     maze: List[List[int]],

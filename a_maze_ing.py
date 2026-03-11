@@ -11,35 +11,93 @@ from generation.RandomGenerator import RandomGenerator
 from generation.Pattern42 import Pattern42
 
 import curses
-from typing import Any
+from typing import Any, List, Tuple
 
-from drawing.maze_io import read_maze_file
 from drawing.maze_solver import solve_maze
-from drawing.maze_draw import draw_maze, draw_menu, apply_theme, rotate_theme
+from drawing.maze_draw import (
+    draw_maze, draw_menu, apply_theme, rotate_theme, animate_generation
+)
 
 
-def parsing(stdscr: Any, filename: str) -> None:
+def _build_maze(
+    config: dict,
+) -> Tuple[
+    List[List[int]],
+    Tuple[int, int],
+    Tuple[int, int],
+    List[Tuple[int, int, int, int]],
+]:
+    """
+    Generate a maze according to *config*, write the output file, and
+    return the display grid, entry/exit positions, and generation steps.
+
+    Args:
+        config: validated configuration dictionary.
+
+    Returns:
+        grid: 2D list of wall bitmasks ready for drawing.
+        entry_pos: (x, y) entry cell.
+        exit_pos: (x, y) exit cell.
+        steps: ordered list of (x1, y1, x2, y2) wall-removal events that
+               produced the maze, suitable for animate_generation().
+    """
+    mazevalidate = mazeValidator(
+        width=config['width'],
+        height=config['height'],
+        entry=config['entry'],
+        exit_=config['exit'],
+    )
+    maze_obj = Maze(
+        mazevalidate.width, mazevalidate.height,
+        mazevalidate.entry, mazevalidate.exit_,
+    )
+    pattern42 = Pattern42(maze_obj)
+    pattern42.draw()
+
+    seed = config.get('seed')
+    if config['perfect']:
+        gen: Any = DFSGenerator(maze_obj, seed=seed)
+    else:
+        gen = RandomGenerator(maze_obj, seed=seed)
+    gen.generate()
+
+    solver = BSFSolver(maze_obj)
+    path = solver.BFS()
+    validate = ValidateConnectivity3X3EREA(maze_obj)
+    if not validate.is_connected():
+        raise ValueError("Maze is not fully connected")
+
+    writer = MazeWriter(maze_obj, path or [])
+    writer.write_config(config['output_file'])
+
+    grid: List[List[int]] = [
+        [cell.walls for cell in row] for row in maze_obj.grid
+    ]
+    return grid, maze_obj.entry, maze_obj.exit, gen.steps
+
+
+def parsing(stdscr: Any, config: dict) -> None:
     """
     Main entry point for the Amazing Maze Engine using curses.
 
     Args:
         stdscr: curses window object.
-        filename: path to the maze file to load.
+        config: validated configuration dictionary.
     """
     curses.curs_set(0)
     curses.start_color()
     curses.use_default_colors()
     apply_theme()
 
-    maze, entry_pos, exit_pos = read_maze_file(filename)
-
+    maze, entry_pos, exit_pos, steps = _build_maze(config)
     solution = solve_maze(maze, entry_pos, exit_pos)
 
     show_solution = False
     animate_solution = False
 
-    # Initial maze build animation
-    draw_maze(stdscr, maze, entry_pos, exit_pos, animate_maze=True)
+    # Animate the initial maze generation cell by cell
+    animate_generation(stdscr, steps, len(maze), len(maze[0]),
+                       entry_pos, exit_pos)
 
     while True:
         # Draw maze with or without solution
@@ -60,10 +118,12 @@ def parsing(stdscr: Any, filename: str) -> None:
         key = stdscr.getch()
 
         if key == ord('1'):
-            # Re-generate maze
-            maze, entry_pos, exit_pos = read_maze_file(filename)
+            # Re-generate maze and animate the new generation
+            maze, entry_pos, exit_pos, steps = _build_maze(config)
             solution = solve_maze(maze, entry_pos, exit_pos)
-            draw_maze(stdscr, maze, entry_pos, exit_pos, animate_maze=True)
+            show_solution = False
+            animate_generation(stdscr, steps, len(maze), len(maze[0]),
+                               entry_pos, exit_pos)
 
         elif key == ord('2'):
             # Toggle solution animation
@@ -83,44 +143,12 @@ def main() -> None:
     try:
         validate_file = ConfigValidation(sys.argv[1])
         config = validate_file.validate()
-        mazevalidate = mazeValidator(width=config['width'],
-                                     height=config['height'],
-                                     entry=config['entry'],
-                                     exit_=config['exit'])
-        maze = Maze(mazevalidate.width, mazevalidate.height,
-                    mazevalidate.entry,
-                    mazevalidate.exit_)
-        pattern42 = Pattern42(maze)
-        pattern42.draw()
-        if config['perfect']:
-            dfs = DFSGenerator(maze, seed=config.get('seed'))
-            dfs.generate()
-        else:
-            randomgenerator = RandomGenerator(maze, seed=config.get('seed'))
-            randomgenerator.generate()
-        for row in maze.grid:
-            print([cell.walls for cell in row])
-        solver = BSFSolver(maze)
-        path = solver.BFS()
-        validate = ValidateConnectivity3X3EREA(maze)
-        if not validate.is_connected():
-            raise ValueError("Maze is not fully connected")
-        # if not validate.open_erea3X3():
-        #     raise ValueError("Maze contains open 3x3 area")
-        # if not validate.is_perfect():
-        #     raise ValueError("maze is not perfect")
-        writer = MazeWriter(maze, path or [])
-        writer.write_config(config['output_file'])
+
         if len(sys.argv) != 2:
             print("Usage: python3 main.py <maze_file.txt>")
             sys.exit(1)
 
-        maze, entry_pos, exit_pos = read_maze_file(config['output_file'])
-        if maze is None:
-            print("Malformed maze detected. Exiting.")
-            sys.exit(1)
-
-        curses.wrapper(parsing, config['output_file'])
+        curses.wrapper(parsing, config)
     except ValidationError as e:
         for error in e.errors():
             print(error['msg'])

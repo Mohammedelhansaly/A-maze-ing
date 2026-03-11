@@ -1,11 +1,12 @@
 import random
 from maze.Maze import Maze
-from typing import Optional
+from typing import List, Optional, Tuple
 
 
 class DFSGenerator:
     def __init__(self, maze: Maze, seed: Optional[int] = None) -> None:
         self.maze = maze
+        self.steps: List[Tuple[int, int, int, int]] = []
         if seed is not None:
             random.seed(seed)
 
@@ -57,6 +58,7 @@ class DFSGenerator:
             neighbor_cell = self.maze.get_cell(nx, ny)
             if not neighbor_cell.visited and not neighbor_cell.blocked:
                 self.maze.remove_wall_between(x, y, nx, ny)
+                self.steps.append((x, y, nx, ny))
                 self._dfs(nx, ny)
 
 # maze = Maze(11, 20, (0, 0), (10, 10))
