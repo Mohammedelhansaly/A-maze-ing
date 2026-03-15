@@ -1,13 +1,14 @@
 import sys
-from configValidation.config_validation import ConfigValidation
+from mazegen.configValidation.config_validation import ConfigValidation
 from pydantic import ValidationError
 from mazegen import MazeGenerator
 import curses
 from typing import Any
 
-from drawing.maze_io import read_maze_file
-from drawing.maze_solver import solve_maze
-from drawing.maze_draw import draw_maze, draw_menu, apply_theme, rotate_theme
+from mazegen.drawing.maze_io import read_maze_file
+from mazegen.drawing.maze_solver import solve_maze
+from mazegen.drawing.maze_draw import draw_maze, draw_menu
+from mazegen.drawing.maze_draw import apply_theme, rotate_theme
 
 
 def parsing(stdscr: Any, filename: str) -> None:

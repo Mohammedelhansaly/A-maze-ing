@@ -7,3 +7,9 @@ mazegen.egg-info/SOURCES.txt
 mazegen.egg-info/dependency_links.txt
 mazegen.egg-info/requires.txt
 mazegen.egg-info/top_level.txt
+mazegen/configValidation/__init__.py
+mazegen/configValidation/config_validation.py
+mazegen/drawing/__init__.py
+mazegen/drawing/maze_draw.py
+mazegen/drawing/maze_io.py
+mazegen/drawing/maze_solver.py
