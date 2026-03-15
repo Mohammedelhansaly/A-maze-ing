@@ -30,11 +30,7 @@ make install
 ```
 This will install all dependencies listed in requirements.txt and prepare the environment to run the project.
 
-After creating the virtual environment (for example, named `venv`),activate it to start using the project’s dependencies.
 
-```bash
-source venv/bin/acivate
-```
 Before running the project, please ensure that the virtual environment is created and all dependencies are installed and activated.
 
 ```bash
