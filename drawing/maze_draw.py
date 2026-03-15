@@ -305,7 +305,7 @@ def draw_maze(
                 safe_addstr(stdscr, screen_y, screen_x, PATH_CHAR,
                             curses.color_pair(5) | curses.A_BOLD)
                 stdscr.refresh()
-                curses.napms(8)
+                curses.napms(20)
                 draw_cell(stdscr, maze, y, x)
             stdscr.refresh()
             curses.napms(15)

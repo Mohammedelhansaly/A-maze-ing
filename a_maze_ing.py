@@ -1,17 +1,7 @@
 import sys
-from config_validation.config_validation import ConfigValidation
-from maze.Maze import Maze
-from validation.maze_validator import mazeValidator
-from generation.DFS import DFSGenerator
-from solving.BFS import BSFSolver
-from validation.validate_connectivity import ValidateConnectivity3X3EREA
-from output.output_writer import MazeWriter
+from configValidation.config_validation import ConfigValidation
 from pydantic import ValidationError
-from generation.RandomGenerator import RandomGenerator
-from generation.Pattern42 import Pattern42
-from generation.PRIME import PrimeGenerator
-
-
+from mazegen import MazeGenerator
 import curses
 from typing import Any
 
@@ -62,21 +52,22 @@ def parsing(stdscr: Any, filename: str) -> None:
         key = stdscr.getch()
         validate_file = ConfigValidation(sys.argv[1])
         config = validate_file.validate()
-        maze1 = Maze(config['width'], config['height'],
-                     config['entry'],
-                     config['exit'])
-        pattern42 = Pattern42(maze1)
+        maze1 = MazeGenerator(config['width'], config['height'],
+                              config['entry'],
+                              config['exit'])
+        pattern42 = MazeGenerator.Pattern42(maze1)
         pattern42.draw()
         if key == ord('1'):
             # Re-generate maze
             if config['perfect']:
-                dfs = DFSGenerator(maze1, seed=config.get('seed'))
+                dfs = MazeGenerator.DFSGenerator(maze1,
+                                                 seed=config.get('seed'))
                 dfs.generate()
             else:
-                randomgenerator = RandomGenerator(maze1,
-                                                  seed=config.get('seed'))
+                randomgenerator = MazeGenerator.RandomGenerator(
+                    maze1, seed=config.get('seed'))
                 randomgenerator.generate()
-            write = MazeWriter(maze1, [])
+            write = MazeGenerator.MazeWriter(maze1, [])
             write.write_config(config['output_file'])
             maze, entry_pos, exit_pos = read_maze_file(config['output_file'])
             solution = solve_maze(maze, entry_pos, exit_pos)
@@ -93,14 +84,16 @@ def parsing(stdscr: Any, filename: str) -> None:
 
         elif key == ord('4'):
             if change_algo:
-                dfs = DFSGenerator(maze1, seed=config.get('seed'))
+                dfs = MazeGenerator.DFSGenerator(
+                    maze1, seed=config.get('seed'))
                 dfs.generate()
                 change_algo = False
             else:
-                prime = PrimeGenerator(maze1, seed=config.get('seed'))
+                prime = MazeGenerator.PrimeGenerator(
+                    maze1, seed=config.get('seed'))
                 prime.generate()
                 change_algo = True
-            write = MazeWriter(maze1, [])
+            write = MazeGenerator.MazeWriter(maze1, [])
             write.write_config(config['output_file'])
             maze, entry_pos, exit_pos = read_maze_file(config['output_file'])
             solution = solve_maze(maze, entry_pos, exit_pos)
@@ -113,33 +106,35 @@ def main() -> None:
     try:
         validate_file = ConfigValidation(sys.argv[1])
         config = validate_file.validate()
-        mazevalidate = mazeValidator(width=config['width'],
-                                     height=config['height'],
-                                     entry=config['entry'],
-                                     exit_=config['exit'])
-        maze = Maze(mazevalidate.width, mazevalidate.height,
-                    mazevalidate.entry,
-                    mazevalidate.exit_)
-        pattern42 = Pattern42(maze)
+        maze_validate = MazeGenerator.mazeValidator(width=config['width'],
+                                                    height=config['height'],
+                                                    entry=config['entry'],
+                                                    exit_=config['exit'])
+        maze = MazeGenerator(maze_validate.width,
+                             maze_validate.height,
+                             maze_validate.entry,
+                             maze_validate.exit_)
+        pattern42 = MazeGenerator.Pattern42(maze)
         pattern42.draw()
         if config['perfect']:
-            dfs = DFSGenerator(maze, seed=config.get('seed'))
+            dfs = MazeGenerator.DFSGenerator(maze, seed=config.get('seed'))
             dfs.generate()
         else:
-            randomgenerator = RandomGenerator(maze, seed=config.get('seed'))
+            randomgenerator = MazeGenerator.RandomGenerator(
+                maze, seed=config.get('seed'))
             randomgenerator.generate()
         for row in maze.grid:
             print([cell.walls for cell in row])
-        solver = BSFSolver(maze)
+        solver = MazeGenerator.BSFSolver(maze)
         path = solver.BFS()
-        validate = ValidateConnectivity3X3EREA(maze)
+        validate = MazeGenerator.ValidateConnectivity3X3EREA(maze)
         if not validate.is_connected():
             raise ValueError("Maze is not fully connected")
-        # if not validate.open_erea3X3():
-        #     raise ValueError("Maze contains open 3x3 area")
+        if not validate.open_erea3X3():
+            raise ValueError("Maze contains open 3x3 area")
         # if not validate.is_perfect():
         #     raise ValueError("maze is not perfect")
-        writer = MazeWriter(maze, path or [])
+        writer = MazeGenerator.MazeWriter(maze, path or [])
         writer.write_config(config['output_file'])
         if len(sys.argv) != 2:
             print("Usage: python3 main.py <maze_file.txt>")

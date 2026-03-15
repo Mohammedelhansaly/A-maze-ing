@@ -1,0 +1,16 @@
+[project]
+name = "mazegen"
+version = "1.0.0"
+description = "Reusable maze generator"
+authors = [{name="maze ramadan"}]
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.12"
+]
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mazegen*"]
