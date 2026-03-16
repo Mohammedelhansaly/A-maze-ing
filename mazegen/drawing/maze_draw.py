@@ -7,7 +7,7 @@ WALL_CHAR = '█'
 PATH_CHAR = ' '
 ENTRY_CHAR = 'E'
 EXIT_CHAR = 'X'
-SOLUTION_CHAR = '☀'
+SOLUTION_CHAR = '█'
 
 # ---------- Header ----------
 HEADER_TEXT = "★ THE AMAZING MAZE ENGINE ★"

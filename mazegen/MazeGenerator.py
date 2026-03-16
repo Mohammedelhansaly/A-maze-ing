@@ -1,7 +1,10 @@
+import sys
 from typing import Optional
 import random
 from collections import deque
 from pydantic import BaseModel, Field, model_validator, field_validator
+
+sys.setrecursionlimit(1000000)
 
 
 class MazeGenerator:
@@ -119,14 +122,16 @@ class MazeGenerator:
                  len(self.pattern[0]) // 2)
             y = (self.maze.height // 2 - len(self.pattern) +
                  len(self.pattern) // 2)
+            path42 = []
             for i in range(len(self.pattern)):
                 for j in range(len(self.pattern[0])):
                     cell = self.maze.get_cell(x + j, y + i)
-                    # cell.walls = pattern[i][j]
-                    # if cell.walls == 15:
-                    #     cell.blocked = True
                     if self.pattern[i][j] == 1:
                         cell.blocked = True
+                        path42.append(((x + i), (y + j)))
+
+                if (self.maze.entry or self.maze.exit) in path42:
+                    raise ValueError("Entry/Exit point inside 42 pattern")
 
     class PrimeGenerator:
         DIRECTIONS = [(0, -1), (0, 1), (1, 0), (-1, 0)]

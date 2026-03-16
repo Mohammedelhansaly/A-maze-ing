@@ -83,6 +83,8 @@ class ConfigValidation:
                 config["seed"] = int(value)
 
             elif key == "output_file":
+                if value.startswith("."):
+                    raise ValueError("Output file dont start with '.'")
                 if not value.endswith(".txt"):
                     raise ValueError("Output file must be .txt")
                 config["output_file"] = value

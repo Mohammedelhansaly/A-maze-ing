@@ -150,9 +150,7 @@ def main() -> None:
     except ValidationError as e:
         for error in e.errors():
             print(error['msg'])
-    except ValueError as e:
-        print(e)
-    except FileNotFoundError as e:
+    except (ValueError, FileNotFoundError, KeyboardInterrupt, EOFError) as e:
         print(e)
 
 
