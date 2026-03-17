@@ -13,7 +13,6 @@ SOLUTION_CHAR = '█'
 HEADER_TEXT = "★ THE AMAZING MAZE ENGINE ★"
 
 # ---------- Color Themes ----------
-# ---------- Color Themes ----------
 # Format: (walls, entry, exit, solution, highlight)
 COLOR_THEMES: List[Tuple[int, int, int, int, int]] = [
     (
@@ -202,6 +201,23 @@ def animate_generation(
     canvas_height = 2 * height + 1
     canvas_width = 2 * width + 1
 
+    # -------- SIZE CHECK & WAIT --------
+    required_height = canvas_height + 8
+    required_width = canvas_width
+    while True:
+        term_h, term_w = stdscr.getmaxyx()
+        if term_h >= required_height and term_w >= required_width:
+            break
+        stdscr.clear()
+        safe_addstr(stdscr, 2, 2, "Terminal window too small!", curses.A_BOLD)
+        safe_addstr(stdscr, 4, 2, f"Required: {required_width}x"
+                                  f"{required_height}")
+        safe_addstr(stdscr, 5, 2, f"Current:  {term_w}x{term_h}")
+        safe_addstr(stdscr, 7, 2, "Resize terminal and wait...", curses.A_BOLD)
+        stdscr.refresh()
+        curses.napms(200)
+    # ---- END CHECK ----
+
     # Fill solid wall background
     for cy in range(canvas_height):
         for cx in range(canvas_width):
@@ -284,9 +300,27 @@ def draw_maze(
     canvas_height = 2 * height + 1
     canvas_width = 2 * width + 1
 
+    # -------- SIZE CHECK & WAIT --------
+    required_height = canvas_height + 8
+    required_width = canvas_width
+    while True:
+        term_h, term_w = stdscr.getmaxyx()
+        if term_h >= required_height and term_w >= required_width:
+            break
+        stdscr.clear()
+        safe_addstr(stdscr, 2, 2, "Terminal window too small!", curses.A_BOLD)
+        safe_addstr(stdscr, 4, 2, f"Required: {required_width}x"
+                                  f"{required_height}")
+        safe_addstr(stdscr, 5, 2, f"Current:  {term_w}x{term_h}")
+        safe_addstr(stdscr, 7, 2, "Resize terminal and wait...", curses.A_BOLD)
+        stdscr.refresh()
+        curses.napms(200)
+
+    # ---- END CHECK ----
+
+# -------- DRAW MAZE --------
     if animate_maze:
-        # Phase 1: Curtain sweep — fill walls column by column with a bright
-        # leading-edge highlight that settles to the normal wall colour.
+        # Curtain sweep
         for x in range(canvas_width):
             for y in range(canvas_height):
                 safe_addstr(stdscr, y, x, WALL_CHAR,
@@ -296,24 +330,14 @@ def draw_maze(
             for y in range(canvas_height):
                 safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
 
-        # Phase 2: Carve maze cells row by row; each cell briefly flashes
-        # before being carved to give a "chisel" effect.
+        # Carve maze cells
         for y in range(height):
             for x in range(width):
-                screen_y = 2 * y + 1
-                screen_x = 2 * x + 1
-                safe_addstr(stdscr, screen_y, screen_x, PATH_CHAR,
-                            curses.color_pair(5) | curses.A_BOLD)
-                stdscr.refresh()
-                curses.napms(20)
                 draw_cell(stdscr, maze, y, x)
-            stdscr.refresh()
-            curses.napms(15)
+                stdscr.refresh()
+                curses.napms(10)
 
-        stdscr.refresh()
-        curses.napms(120)  # Brief pause to appreciate the completed maze
     else:
-        # Instant fill and carve (no animation)
         for y in range(canvas_height):
             for x in range(canvas_width):
                 safe_addstr(stdscr, y, x, WALL_CHAR, curses.color_pair(1))
@@ -335,23 +359,15 @@ def draw_maze(
     safe_addstr(stdscr, header_y, header_x, HEADER_TEXT,
                 curses.color_pair(1) | curses.A_BOLD)
 
-    # Draw solution path
+    # Draw solution
     if solution:
         path_positions = _solution_screen_positions(solution)
-        if animate_solution:
-            # A moving cursor (CURSOR_CHAR) travels the full path — including
-            # the corridor cells between maze cells — leaving solution markers
-            # as a connected trail behind it.
-            for sol_y, sol_x in path_positions:
-                safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
-                            curses.color_pair(4) | curses.A_BOLD)
+        for sol_y, sol_x in path_positions:
+            safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
+                        curses.color_pair(4) | curses.A_BOLD)
+            if animate_solution:
                 stdscr.refresh()
                 curses.napms(40)
-            stdscr.refresh()
-        else:
-            for sol_y, sol_x in path_positions:
-                safe_addstr(stdscr, sol_y, sol_x, SOLUTION_CHAR,
-                            curses.color_pair(4) | curses.A_BOLD)
 
     stdscr.refresh()
 
